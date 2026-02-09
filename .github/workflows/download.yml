@@ -4,6 +4,20 @@ on:
   push:
     tags:
       - '**'
+  workflow_dispatch:
+    inputs:
+      image:
+        description: '镜像名（含 tag），如 testcontainers/ryuk:0.5.1；需要 arm64 可在末尾加 -arm64'
+        required: true
+        type: string
+      platform:
+        description: '架构（手动触发时生效，若镜像名已带 -arm64/-amd64 则以镜像名为准）'
+        required: false
+        default: 'amd64'
+        type: choice
+        options:
+          - amd64
+          - arm64
 
 jobs:
   download-image:
@@ -24,16 +38,25 @@ jobs:
 
       - name: Get the image info
         run: |
-          tag_name="${GITHUB_REF#refs/tags/}"
-          image_name="${tag_name//--/:}"
-          platform="amd64"
-          
-          regex="(.+)(-amd64|-arm64)$"
-          if [[ $image_name =~ $regex ]]; then
-            image_name="${BASH_REMATCH[1]}"
-            platform="${BASH_REMATCH[2]#-}"
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            image_name="${{ github.event.inputs.image }}"
+            platform="${{ github.event.inputs.platform }}"
+            # 若手动输入的镜像名带 -arm64/-amd64 后缀，则优先使用
+            regex="(.+)(-amd64|-arm64)$"
+            if [[ $image_name =~ $regex ]]; then
+              image_name="${BASH_REMATCH[1]}"
+              platform="${BASH_REMATCH[2]#-}"
+            fi
+          else
+            tag_name="${GITHUB_REF#refs/tags/}"
+            image_name="${tag_name//--/:}"
+            platform="amd64"
+            regex="(.+)(-amd64|-arm64)$"
+            if [[ $image_name =~ $regex ]]; then
+              image_name="${BASH_REMATCH[1]}"
+              platform="${BASH_REMATCH[2]#-}"
+            fi
           fi
-          
           echo "image_name=$image_name" >> $GITHUB_ENV
           echo "platform=$platform" >> $GITHUB_ENV
 

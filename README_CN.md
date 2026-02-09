@@ -6,14 +6,25 @@
 
 ## 使用
 
-fork 并 clone 本仓库，并根据需要下载的镜像名称创建 git tag，GitHub Action 将会把镜像文件 `image.tar` 存储在 Artifacts 中。
+### 方式一：手动触发（推荐）
+
+1. 打开仓库的 **Actions** 页，选择 **Download** workflow。
+2. 点击 **Run workflow**，在 **image** 输入框中填写镜像名（含 tag），例如：`testcontainers/ryuk:0.5.1`。
+3. 需要 `linux/arm64` 镜像时，可在镜像名后加 `-arm64`（如 `testcontainers/ryuk:0.5.1-arm64`），或在下拉框中选择 **arm64**。
+4. 点击 **Run workflow** 开始执行，完成后在本次运行的 Artifacts 中下载 `image.zip`。
+
+无需创建或推送 tag，即可随时触发镜像下载。
+
+### 方式二：通过创建 Tag 触发
+
+fork 并 clone 本仓库，并根据需要下载的镜像名称创建 git tag，推送后 GitHub Action 会自动运行，将镜像文件 `image.tar` 存储在 Artifacts 中。
 
 注意：
 - 因为 git tag 中不能有 `:`，因此你需要使用 `--` 来代替镜像名称中的 `:`。
 - 工作流默认使用 `linux/amd64` 平台，如果你想要 `linux/arm64` 的镜像，可以在标签名中添加后缀 `-arm64`。
 - 默认情况下，GitHub Action 在 fork 仓库里是未启用的，因此你可能需要手动启用它。请参阅[文档](https://docs.github.com/en/actions/using-workflows/disabling-and-enabling-a-workflow?tool=webui#enabling-a-workflow)。
 
-现在假设你要下载 Docker 镜像 `testcontainers/ryuk:0.5.1`，那么你应该在项目目录执行以下命令：
+例如要下载 Docker 镜像 `testcontainers/ryuk:0.5.1`，在项目目录执行：
 
 ```shell
 # 'testcontainers/ryuk--0.5.1' 代表镜像 'testcontainers/ryuk:0.5.1'
@@ -21,7 +32,7 @@ git tag testcontainers/ryuk--0.5.1
 git push origin --tags
 ```
 
-tag 推送后将自动触发 GitHub Action，你可以进入你的 fork 仓库的 [actions](https://github.com/whhe/docker-images-downloader/actions) 页面，在最新的 workflow 页面查看执行详情。
+tag 推送后将自动触发 GitHub Action，可在仓库的 [Actions](https://github.com/whhe/docker-images-downloader/actions) 页面查看执行详情。
 
 GitHub Action 的 workflow 完成后，您可以从 Artifacts 部分下载镜像文件，然后通过以下命令加载 Docker 镜像：
 
